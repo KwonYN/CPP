@@ -1,0 +1,989 @@
+#pragma warning (disable: 4996)
+
+#if 0
+#include <stdio.h>
+
+struct st
+{
+	int no;
+	char ch;
+};
+
+void InitStruct(struct st * p, int n, char c); // main 안에서 함수 선언 가능 ㅋㅋ 단, main 안에서만 사용 가능!
+// 값을 담아오기 위한 함수
+void PrintStruct(const struct st * p);
+// 값을  ★읽기★ 위한 함수 -> const를 써줌 ㅋ(상수화 시켜줌! 즉, 바꾸지 못함.
+//										  하지만 C의 const는 완전한 상수화를 시켜주지 못한다고 함!)
+// 재사용을 염두에 둔다면, 이렇게 사용! 가독성이 높아짐.
+
+/* 가만히 살펴보면, 구조체가 없으면 함수는 의미가 없고, 함수가 없으면 구조체의 값을 읽거나 쓸 수 없다.
+   즉, 둘의 관계는 불가분의 관계이다.
+   => 그럼 같이 묶어서 관리할 수는 없을까? 그렇다면 재사용에 유리하지 않을까?
+   => C++에 가서는 함수를 구조체 안에 둘 수 있도록 했다! */
+
+void main(void)
+{
+	struct st aa;	// 구조체 변수 선언!
+	printf("size of struct st? = %d\n", sizeof(aa));	// 가장 큰 바이트인 int를 기준으로 그의 배수(=> 8바이트)
+	
+	InitStruct(&aa, 5, 'A');	// Call by Address
+	PrintStruct(&aa);			// 구조체는 크기가 커서 Call by Value는 잘 사용 안함!
+}
+
+void InitStruct(struct st * p, int n, char c)
+{
+	p->no = n;
+	p->ch = c;
+}
+
+void PrintStruct(const struct st * p)
+{
+	printf("You can read struct st type variable thanks to me! : ");
+	printf("%d, %c\n", p->no, p->ch);
+}
+#endif
+
+// C++에서의 구조체 활용과 C와의 차이점
+#if 0
+#include <stdio.h>
+
+/* 가만히 살펴보면, 구조체가 없으면 함수는 의미가 없고, 함수가 없으면 구조체의 값을 읽거나 쓸 수 없다.
+즉, 둘의 관계는 불가분의 관계이다.
+=> 그럼 같이 묶어서 관리할 수는 없을까? 그렇다면 재사용에 유리하지 않을까?
+=> C++에 가서는 함수를 구조체 안에 둘 수 있도록 했다! */
+
+struct st
+{
+private:	// 주로 member 변수/데이터들은 private 접근 권한을, 함수들은 public 접근 권한을 줌 (★재사용을 위함★)
+	int no;
+	char ch;
+
+public:
+	// 값을 담아오기 위한 함수
+	void InitStruct(int n, char c)
+	{
+		if (!(n & 1)) n++;	// no가 항상 짝수가 아닌 홀수가 되도록 만들고 싶어서!!
+		no = n;
+		ch = c;
+	}
+	// 값을  ★읽기★ 위한 함수 -> const를 써줌 ㅋ(상수화 시켜줌! 즉, 바꾸지 못함. 하지만 C의 const는 완전한 상수화를 시켜주지 못한다고 함!)
+	// 재사용을 염두에 둔다면, 이렇게 사용! 가독성이 높아짐.
+	void PrintStruct(void) const	// ★const struct st * p가 인자로 없어서 가독성이 떨어질 수 있음. 이렇게 표현함으로써 알려줌!!
+	{
+		printf("You can read struct st type variable thanks to me! : ");
+		printf("%d, %c\n", no, ch);
+	}
+};
+// 이렇게 구조체 내에 있는 함수를 "지역 함수"라고 하고, 그 밖에 있는 함수들을 "전역 함수"라고 함!
+// 그래서 C++ 입장에서 C의 모든 함수는 전역함수임!
+// ★지역함수는 이름으로만 호출되지 않고, 자신을 호출해주는 주체가 있어야 함! (이 예시에서는 aa) => OBJECT에 의해 호출됨!!!!!
+// 구조체 내에 포함되어 있기 때문에 Call by Addr을 위해 인수로 struct st * p를 줄 필요도 없고, p->no로 접근할 필요 없음
+
+void main(void)
+{
+	/*struct*/ st aa;
+	/* ★C++에서는 st 자체가 식별자가 아니라, 데이터 타입이다!!
+	   (C언어의 기본형은 int, C의 많은 연산자들은 정수에 대해서는 관대하지만 다른 데이터 타입에는 적용할 수 없다는 편향성이 있음...
+	   C++(객체지향)에서는 모든 데이터 타입을 정수형처럼 만들어 주어서 기존 라이브러리의 함수에 다 적용할 수 있도록,.,,(?)) */
+	
+	// aa.no = 4; => 이거 풀어보면 no에 빨간줄 그어질 것임. 구조체 내의 변수가 private이기 때문에 함부로 접근할 수 없음
+
+	aa.InitStruct(5, 'A');	// ★구조체 내에 있는 함수이므로 aa.을 통해 호출해야 함!★
+	aa.PrintStruct();
+}
+#endif
+
+
+
+
+// cout
+#if 0
+#include <iostream>
+#include <iomanip>
+using namespace std;		// cout을 사용하기 위해 꼭 필요한 것!!
+
+void main(void)
+{
+	cout << "kia~";
+	cout << 10 << " " << 3.14 << 'A' << endl;
+	cout << hex << 20 << endl;	// endl은 endline으로써 개행문자와 같은 기능을 함!
+			// oct(8), dec(10), hex(16) 진수로!
+	
+	int no = 10;
+
+	cout << "hello world." << endl; // printf(“hello world.\n”);
+	cout << no << endl;
+	cout << hex << 10 << endl; // oct, dec
+	cout << left << setw(10) << "seoul" << "KOREA" << endl;
+	cout << fixed << setprecision(2) << 3.141592653589793238 << endl;
+}
+#endif
+
+
+
+
+// cin
+#if 0
+#include <iostream>
+using namespace std;		// cout을 사용하기 위해 꼭 필요한 것!!
+
+void main(void)
+{
+	int num;
+	cout << "Input Decimal : ";
+	cin >> num; // scanf("%d", &num); // call by address
+	cout << "Hexa : " << hex << num << endl;
+	cout << 30 << endl;	/* 얘도 Hexa로 나옴.. 근데 왜 그럴까? cout는 iostream 전역으로 선언이 되어 있음!!
+						   그래서 바로 위의 cout과 같은 애라고 봐야 함!! 문장은 서로 다르더라도 같은 object! */
+	cout << dec << 30 << endl; // 이렇게 다시 재지정 해줘야 Decimal 값을 출력함!
+
+
+	const int n = 5;	// => ★컴파일 타임에 상수로 인식이 된다고 함!! (in C++)
+	int ARR[n];		// 이게 가능하다니!!!ㅋㅋ
+
+	int age;
+	char name[30], addr[30];
+	cout << "What's your name? : ";
+	cin >> name;
+	cout << "How old are you? : ";
+	cin >> age;	// scanf("%d", &age);와 다르게 &값이 아니네!!!
+	cout << "What's your address? : ";
+	//cin >> addr;
+	
+	// 얘가 없다면, cin.getline은 위에 age를 입력한 후 친 개행문자(enter)를 받게 됨!! 그래서 버퍼를 비워주어야 함!
+	cin.ignore();  // fflush(stdin); 얘랑 같은 역할!!
+	cin.getline(addr, 30);	// 최대 29자까지 입력을 받음 (★버퍼 검사를 하면서!!! && ★개행/여백도 받을 수 있어!!)
+	// gets(addr);은 편하기는 하지만, 버퍼 검사를 해주지 않음!
+	// scanf("%s", addr); 또한 많이 사용하긴 했지만, 공백을 받을 수 없음
+
+
+	cout << name << " " << age << " " << addr << endl;	
+}
+#endif
+
+
+
+
+// 변수 선언
+#if 0
+#include <iostream>
+using namespace std;		// cout을 사용하기 위해 꼭 필요한 것!!
+
+int sub(int r) // int r = 5; // int r(5); // 인수전달 수식 == 선언과 동시에 초기화 (可)
+{
+	int imsi;
+
+	return imsi = r * 2; // int imsi = r; // int imsi(r); // 리턴 수식 == 선언과 동시에 초기화 (可)
+}
+
+
+void main(void)
+{
+	int m;
+	cout << sub(m = 5) << endl;
+	cout << sub(int(5)) << endl;
+
+	int array[] = { 10, 20, 30, 40 };
+	for (int n : array) // 배열의 0번째 요소부터 순차적으로 순회하는 for문(현 위치에서 변수 선언 요함)
+	{
+		cout << n << endl;
+	}
+
+
+	const char * names[3] = { "kim", "park", "lee" };
+	for (const char * irum : names)
+	{
+		cout << irum << endl;
+	}
+
+}
+#endif
+
+
+
+
+
+// Scope 연산자 - 1
+#if 0
+#include <iostream>
+
+struct st
+{
+private:
+	int no;
+	char ch;
+
+public:
+	void InitStruct(int n, char c);
+	void PrintStruct(void) const;
+};
+
+void st:: InitStruct(int n, char c)
+{
+	if (!(n & 1)) n++;
+	no = n;
+	ch = c;
+}
+
+void st::PrintStruct(void) const	// 이 const를 보고 후배들이 '아, 얘는 읽기만 하는 함수구나!' 라고 알 수 있음
+{
+	printf("You can read struct st type variable thanks to me! : ");
+	printf("%d, %c\n", no, ch);
+}
+// 보통 구조체 안에는 함수를 선언만 해주고, 이렇게 함수의 정의는 밖으로 빼는 경우가 많음!
+// 훗날 후배들이 알 수 있도록 st::라고 ★소속을 밝혀줌(scope를 밝혀줌!)★
+
+void main(void)
+{
+	
+}
+#endif
+
+// Scope 연산자 - 2
+#if 0
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
+int no = 10;
+
+void main(void)
+{
+	int no = 5; // 선언과 동시에 초기화
+	cout << no << endl;		// ★전역보다 지역을 우선★
+	cout << ::no << endl;	// ★지역보다 "전역"을 우선★ (함수의 경우 더욱 자주 있는 일!) => scope를 붙여 전역임을 알려줌!
+							// 뿐만 아니라 전역임을 쉽게 알려주기 위해서 같은 이름이 없더라도 ::(scope)를 붙이는 경우도 많다.
+	/* 생각보다 전역과 지역을 구분해야 하는 일이 많음. 특히 함수에서!!
+	   과거에 자신이 만들었던 라이브러리 함수를 그럼 갖다 버려야 하나? 아니다!!
+	   cpp를 쓴다고 과거의 C코드를 버리는 것은 말도 안됨. 특히 재사용을 염두에 둔 cpp잖아? */
+}
+#endif
+
+
+
+
+
+// 예약어 const : C와 다른 점을 보자!
+#if 0
+/*
+// 예약어 const in C
+#if 0
+#include <stdio.h>
+
+void main(void)
+{
+	//const int n;	// const를 썼다는 것은 상수라는 것이고, 그럼 const int n = 5와 같이 값을 지정해주어야 함!
+	//char str[n];	// 그렇기 때문에 n을 요소 크기로 줄 수 없음!!!
+
+	//const int n = 5;
+	//n = 10;		// 에러 뜸 ㅋ
+
+	const int n = 5;
+	int * p = &n;
+	*p = 10;
+	printf("%d\n", n);	// 10으로 바뀌어서 출력됨. 컴파일러가 const임에도 제대로 인식해주지 못하는 것!(그럼 안되는데)
+	// => 즉, C에서는 const로 완벽한 상수화를 시켜주지 못했다는 한계가 있음!!!
+}
+#endif
+*/
+
+
+// 예약어 const : C와 다른 점을 보자!
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
+void main(void)
+{
+	// volatile: 컴파일러가 컴파일할 때 최적화 및 선처리를 하는데 그것을 못 하게 해주는 것.
+	// volatile const int n = 5; 라고 선언을 해준다면, 마지막 출력 부분이 달라질 것! (10, 10으로 출력됨!)
+
+	const int n = 5;
+	//char str[n];	// ★컴파일 시간에 n이 상수값인 5(const)라는 값을 가지므로 이러한 선언 가능!!
+	//int *p = &n;	// ★n의 번지형은 자료형이 const int *이므로 타입이 달라서 에러가 뜸!!!★
+
+	//const int *p = &n; // 선언 시 얘는 에러는 뜨지 않음.
+	//*p = 10;			// ★하지만 바꿀 수 없는 상수 값을 바꾸려고 하는 접근에는 에러가 뜸!!
+
+	int *p = (int *)&n;
+	*p = 10;			
+	cout << n << endl;	// n은 const이므로 바뀌지 않음. n은 바뀌지 않고 5로 출력
+	cout << *p << endl;	// p는 n을 캐스팅해서 "바꾸고야 말 것이다!" 라는 의지가 있었음. *p는 바뀌어 10으로 출력
+}
+// => ★★ 포인터 사용할 때 예약어 const를 꼭! 꼭! 사용해주자!!!
+#endif
+
+#if 0
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
+void main(void)
+{
+	int n = 5, k = 6;
+
+	// 둘은 다른 표현!!
+	const int * p;	// p가 가리키는 대상인 *p가 const, 즉 상수로 보겠다는 것! 그 대상이 상수가 아니더라도
+
+	//int * const q;	// q 자체가 const, 즉 상수로 보겠다는 것 -> 그렇기 때문에 q는 현재 값이 없으므로 에러가 뜸.
+	int * const q = &k;	// -> 그래서 이렇게 선언과 동시에 초기화를 해주어야 함!
+	// 그런데 q가 가리키는 대상이 상수라면?
+	const int * const r = &k; // -> 이와 같이 선언을 해주어야 함;;
+
+	p = &n;
+	// *p = 10;		=> 이미 위에서 p가 가리키는 대상을 const로 봐주겠다고 했기 때문에 값 변경 불가. n = 10;과 같이 n 자체적으로 값 바꾸는 것은 가능ㅋ
+	cout << *p << endl;
+
+	*q = 100;		// q 자체가 const이지만, q가 가리키는 대상이 const인 것은 아님!!
+	//q = &n;		=> 그래서 얘는 에러가 남!	
+	cout << *q << endl;
+
+	sub(&p);
+	func(&q);
+}
+
+// t : 나는 포인터 변수야(t 바로 앞에 있는 *, 즉 t는 주소값이라는 뜻!). 그런데 내가 가리키는 것은 int * const 야!
+void func(int * const *t)		// ★인자 타입에 주목★
+{
+
+}
+
+// t : 나는 포인터 변수야(t 바로 앞에 있는 *, 즉 t는 주소값이라는 뜻!). 그런데 내가 가리키는 것은 const int 야!
+void sub(const int * *t)		// ★인자 타입에 주목★
+{
+
+}
+/*
+< ★ 정리 !! ★ >
+const int * onlyread; // 읽기만 할거야
+int * const onlyyou = &data; // 오직 data만 가리킬거야, 난 변하지 않아.
+int const * icp = &cdata; // 가리키는 데이터는 const int(int const)형이야
+const int * const readonlyyou = &data; // data만을 가리키고 그 대상을 읽기만 할거야.
+*/
+#endif
+
+// 관련 예제 (함수의 return 타입이 const? : 리턴이 되면서 값이 변하는 것을 막기 위함)
+#if 0
+#include <iostream>
+using namespace std;
+
+int * sub(void);
+
+void main(void)
+{
+	// *sub();	// *(변수 n의 주소) => 리턴되는 변수의 주소의 값!?
+				// => n은 지역 변수이고, 함수가 종료되면서 Stack에 있던 것들이 다시 반환됨. 그래서 읽히지 않음!!
+	cout << *sub() << endl;	// 아래와 같은 경우, 주소가 가리키는 값을 읽을 수 있게 됨!!
+}
+
+/*int * sub(void)
+{
+	int n = 5;
+
+	return &n;
+}*/
+int * sub(void)
+{
+	static int n = 5;
+	cout << n << endl;
+	return &n;
+}
+/*
+const int * sub(void)
+{
+	static int n = 5;
+	cout << n << endl;
+	return &n;
+}
+*/					// => 이와 같은 경우, 리턴 타입이 const이므로 읽기만 할 수 있고, 데이터 가리킬 수 없음..(?)
+// ★★ return 타입이 const인 경우, 리턴이 되면서 값이 변하는 것을 막기 위함!! ★★
+#endif
+
+
+
+// ★★ 오버로딩 : 함수의 중복 정의 ★★
+#if 0
+#include <iostream>
+#include <stdlib.h>	// 동적 할당을 위해!
+using namespace std;
+
+void Swap(int * p, int * q);
+void Swap(double * p, double * q);
+void Swap(void *p, void *q, size_t size);
+void Memcpy(void * p, const void * q, size_t cnt);
+
+void main(void)
+{
+	int n = 5, k = 6;
+	double d1 = 3.14, d2 = 2.54;
+
+	//Swap(&n, &k);
+	//Swap(&d1, &d2);
+	Swap(&n, &k);
+	Swap(&d1, &d2, sizeof(double));
+
+	cout << n << " " << k << endl;
+	cout << d1 << " " << d2 << endl;
+}
+
+
+void Swap(int * p, int * q)
+{
+	int tmp;
+
+	tmp = *p;
+	*p = *q;
+	*q = tmp;
+}
+
+void Swap(double * p, double * q)	// 파라미터의 타입이 다르므로 오버로딩 가능!!
+{
+	double tmp;
+
+	tmp = *p;
+	*p = *q;
+	*q = tmp;
+}
+
+
+//  ★★
+void Swap(void *a, void *b, size_t size)	// size_t는 unsigned int 타입임
+{
+	void * tmp = malloc(size);	// 인자인 size는 runtime 때 들어 옴. 그렇기 때문에 동적 할당을 통해 메모리를 가져야 함!
+	if ( tmp == (void *)0x0 ) return;
+
+	Memcpy(tmp, a, size);
+	Memcpy(a, b, size);
+	Memcpy(b, tmp, size);
+	
+	free(tmp);	// free 안하면 메모리 누수 날 수도
+// cf> 최근 고급 언어들은 free를 굳이 해주지 않아도 알아서 해주는 스마트 포인터(C++), 가비지 컬렉터(JAVA) 등의 기능 지원
+}
+
+void Memcpy(void * p, const void * q, size_t cnt)	// 왜 const를 써줄까? : 읽어주기 위한 인자이기 때문!!
+{
+	char * dest = (char *)p;
+	const char * src = (char *)q;
+
+	for ( ;cnt > 0; cnt--) *dest++ = *src++;
+}
+//  ★★
+#endif
+
+// 중복정의(이어서)
+#if 0
+#include <iostream>
+
+struct stream
+{
+	void printf(int);
+	void printf(char);
+	void printf(double);
+	void printf(const char *);
+};
+
+void stream::printf(int n)
+{
+	::printf("%d\n", n);
+}
+
+void stream::printf(char c)
+{
+	::printf("%c\n", c);
+}
+
+void stream::printf(double d)
+{
+	::printf("%lf\n", d);
+}
+
+void stream::printf(const char * str)
+{
+	::printf("%s\n", str);
+}
+
+void main(void)
+{
+	stream c;		// 딱 보면, cout처럼 들어오는 데이터의 타입에 맞게 알아서 출력을 해주는 것을 볼 수 있음!
+					// ostream도 이렇게 정의가 되어 있을 것이라는 것을 알 수 있다!
+					// 특히 같은 이름인데 다른 타입들에 다 대비(?)가 되어 있는 것을 보아 중복정의가 되어 있을 것!!
+	c.printf(5);
+	c.printf(3.14);
+	c.printf("seoul");
+}
+
+#endif
+
+
+
+// 디폴트 파라미터
+#if 0
+#include <time.h>
+#include <iostream>
+using namespace std;
+
+void DisplayDate(int day, int month = 12, int year = 2019);	// 함수 선언 시 디폴트 파라미터를 정의해주어야 함!
+void DisplayDate(void);	// 이런 거는 중복정의 불가함!!
+
+void main(void)
+{
+	DisplayDate(30);			// 2019/12/30
+	DisplayDate(30, 9);			// 2019/9/30
+	DisplayDate(30, 9, 2018);	// 2018/9/30
+
+	DisplayDate();
+}
+
+void DisplayDate(int day, int month, int year)	// ★디폴트 파라미터 값은 오른쪽에서부터! 디폴트 파라미터는 함수 선언 시 정의!★
+{												// Argument pass order는 오른쪽에서부터 왼쪽으로 가기 때문! (C와 똑같음!)
+	cout << year << "/" << month << "/" << day << endl;
+}
+
+void DisplayDate(void)
+{
+	time_t lt;
+	tm *ct;
+	tm tct;		// tm은 연월일을 담는 구조체 타입임!
+
+	time(&lt);	// time 위에 커서를 올려 놓으면 "time_t __cdecl(time_t * Time)" 이라고 뜸. 즉, 인자로 time_t *가 들어가야 함!
+	
+	ct = localtime(&lt);	// 위의 과정에서 lt
+	DisplayDate(ct->tm_mday, ct->tm_mon, ct->tm_year + 1900);	// 오늘 날짜 출력하는 함수!
+
+	localtime_s(&tct, &lt);	// 같은 값이 나옴!
+	DisplayDate(tct.tm_mday, tct.tm_mon, tct.tm_year + 1900);	// 오늘 날짜 출력하는 함수!
+	// 이 때 DisplayDate 함수는 바로 위에 정의한 void DisplayDate(int day, int month, int year)임!!
+}
+#endif
+
+
+
+
+// ★★ Reference ----- Union이랑 비슷 : 같은 공간을 다른 이름으로 부름! (별명) ★★
+// 별도로 별명에 대한 선언이 있어야 함! by using &
+#if 0
+#include <iostream>
+using namespace std;
+
+void subv(int k);
+void subp(int * t);
+void subr(int & r);
+int vsub(int n);
+int * psub(int n);
+int & rsub(int & r);
+
+void main(void)
+{
+	int n = 5;
+	int & rn = n;	// ★ 번지(&)는 자료형(l-value)에 올 수 없음!! 즉, 이 &는 참조의 &!!!
+
+	cout << rn << endl;
+	rn = 10;
+	cout << rn << endl;
+	cout << &n << " " << &rn << endl;	// 같은 주소 값이 나올 것! 또 다른 공간이 할당되는 것이 아니기 때문!!
+
+	subv(n);
+	cout << n << endl;	// (Call by Value) 값이 바뀌지 않고 10으로 그대로 유지!
+
+	subp(&n);
+	cout << n << endl;	// (Call by Address) 주소값을 통해 접근 -> 값이 변화함! => 그래서 입력 받는 함수들(scanf, gets, fgets들이 다 주소값을 인자로 받는 것!!)
+
+	subr(n);			// ★(Call by Reference) 값이 변화함!!!!
+	cout << n << endl;
+	// 하지만 주소로 접근하지 않았는데 값이 변화되네...
+	/*
+	★그래서 const를 사용하게 된다!
+	Like => void subr(const int & r) => 함수 내에서 "r = ~~"와 같이 r 값을 변경시킬 수 없다!! 에러 뜬다!
+	*/
+
+	cout << vsub(n) << endl;	// vsub 함수의 리턴 타입은 int.	// int imsi = n;
+	cout << psub(n) << endl;	// psub 함수 리턴 타입은 int *.	// int * insi = &n;
+	rsub(n) = 0;												// int & imsi = r;	: imsi는 변수 r의 변수(또 다른 공간 할당 X!!!!)
+	/*
+	위와 마찬가지로 값을 변화시키고 싶지 않으면,
+	Like => const int & rsub(int & r)와 같이 사용!!!
+	*/
+	cout << n << endl;
+	// ★ n의 Reference(별명)인 r이 바로 위에서 r = 0;으로 값이 변경되었고, 그렇기 때문에 n 또한 0으로... ★
+}
+
+void subv(int k)	// int k = n;
+{
+	k = 0;
+}
+
+void subp(int * t)	// int * p = &n;
+{
+	*t = 100;
+}
+
+void subr(int & r)	// int & r = n;	=> 함수 안에서 인자로 받은 n을 r이라고 부르겠다!
+{
+	r = 200;
+}
+
+int vsub(int n)
+{
+	return n;
+}
+
+int * psub(int n)
+{
+	return &n;
+}
+
+int & rsub(int & r)
+{
+	return r;
+}
+/*
+예]
+// 포인터 참조
+const char * cstr = "seoul";
+char * & rstr = (char * &)cstr;
+// *rstr = 'A'; // 읽기 전용 메모리에 기록하기 때문에 런타임 오류 발생
+rstr = "korea";
+const char * const & rcstr = cstr; // 다른 주소를 갖지 않기 위한 참조
+// rcstr = "KOREA"; // 변경불가
+
+예]
+// 배열, 배열포인터, 포인터배열, 더블포인터 참조
+char str[] = "seoul";
+char (& rstr)[6] = str; // 배열참조의 경우 요소 개수를 상수로 명시하고 괄호사용
+
+char name[][5] = {"kim", "park"}; // 2차원배열
+char (& rname)[2][5] = name; // 모든 차원에 배열의 크기를 상수로 명시 (의미 : rname은 name의 별명!)
+char (* pname)[5] = name; // 배열포인터
+char (* & rpname)[5] = pname; // 배열포인터의 참조
+
+const char * cname[] = {"kim", "park"};
+const char * (& rcname)[2] = cname; // 포인터배열의 참조
+const char * * pcname = cname; // 더블포인터
+const char * * & rpcname = pcname; // 더블포인터의 참조
+
+예]
+// 다른 크기로 참조
+long data = 0x12345678;
+short & k = (short &)data;
+
+short(& word)[2] = ( short(&)[2] ) data;
+char (& byte)[4] = ( char(&)[4] ) data;
+*/
+#endif
+
+// Reference(이어서)
+#if 0
+#include <iostream>
+using namespace std;
+
+void main(void)
+{
+	long data = 0x12345678;
+	// 4바이트
+	long & word = data;	// 나는 long 타입으로 참조(&)할거야. word라는 이름으로. 무엇을? data를!!
+	// 2바이트
+	short & sword = (short &)data;
+	short (& asword)[2] = (short (&)[2])data;
+	char(&casword)[4] = (char(&)[4])data;
+
+	cout << hex << word << endl;
+	cout << hex << sword << endl;	// 0x5678이 나옴! 리틀 엔디안으로
+	cout << hex << asword[1] << endl;
+	cout << hex << (int)casword[2] << endl;	// 34가 뽑힘...ㄷㄷ
+}
+#endif
+
+
+
+// inline 함수
+// ★ 함수화는 재사용을 염두에 둔 것!! 미래에 호출되어 사용되기 위해 함수를 만드는 것!! ★
+/* => 하지만 함수를 호출하기 위해 기존의 정보를 저장해 두는 prefix 코드와 함수가 끝난 후의 suffix 코드가 필요하기 때문에
+	  함수 호출 자체가 최적화에 최적인 것은 아님! (오버헤드 발생)
+*/
+
+
+
+
+
+
+
+// 입력 오류 처리
+#if 0
+#include <iostream>
+using namespace std;
+
+void main(void)
+{
+	int score;
+	char * grade = "FFFFFFDCBAA";
+
+	do
+	{
+		cout << "점수를 입력해주세요! : ";
+		cin.clear();
+		cin.ignore(cin.rdbuf()->in_avail());
+		cin >> score;
+	} while (cin.fail() || score < 0 || score > 100);
+			// 문자 등 처리,  음수 처리  ,  100점 초과 처리
+
+	cout << grade[score / 10] << endl;
+
+	/*	// < 안 좋은 코드 : 데이터가 늘어나는 만큼 코드도 많이 늘어나게 되는... >
+	switch (score / 10)
+	{
+	case 10:
+	case 9:
+		grade = 'A';
+		break;
+	case 8:
+		grade = 'B';
+		break;
+	case 7:
+		grade = 'C';
+		break;
+	case 6:
+		grade = 'D';
+		break;
+	default:
+		grade = 'F';
+		break;
+	}
+	cout << grade << endl;
+	*/
+}
+#endif
+
+
+
+
+
+// ★동적 메모리 할당★ : C++에서는 메모리 사이즈 할당 말고도 또 다른 정보를 요구! 그 정보에 대해서는 malloc으로 처리 못 해..
+#if 0
+#include <stdio.h>
+#include <stdlib.h>
+
+void main(void)
+{
+	int size;
+	//char data[size];		// 컴파일 타임 때 이 size를 알 수 없으므로, 이 것은 에러가 뜨는 것!!
+	int * p;
+
+	printf("Size : ");
+	scanf("%d", &size);		// Runtime에 입력을 받음
+
+	p = (int *)malloc(size);
+	if ( p == (int *)0x0 ) return;
+
+	/*
+	*p = 100;
+	p++;		// ★free로 제대로 메모리를 반환해주기 위해서는 p가 변화해서는 안된다!!! (즉, 처음에 할당해줬던 주소값을 그대로 프리해주어야 함!!)
+	*p = 200;
+
+	// cf> 처음에 할당해줬던 메모리의 주소에서 16바이트 이전에 size가 저장되어 있다고 함!
+	// 그런데 p가 증가했고, 이것을 다시 free 시켜주려고 한다면, 그 주소에서 16바이트 전에 있는 값을 읽고 작동을 할 것인데
+	// 전혀 엉뚱한 값이 적혀있을 것이므로 오작동을 할 것!!!!!!!!!
+	*/
+	
+	p[0] = 100;
+	p[1] = 200;
+	printf("%d %d\n", p[0], p[1]);
+	printf("Size = %d\n", p[-4]);
+	printf("Size = %d\n", *(int *)((char *) p - 16));
+						  // (int *)는 4바이트 수로 읽기 위한 형변환, (char *)은 1바이트 단위로 바꿔주기 위한 형변환
+	*(int *)((char *)p - 16) = 0;
+	printf("Size = %d\n", _msize(p));
+	*(int *)((char *)p - 16) = size;
+	
+	free(p);
+}
+
+#endif
+
+// 동적 메모리 연산자
+// 우리는 언제 malloc을 사용했나? : 데이터의 크기를 컴파일 시간에 결정할 수 없었을 때
+// C에서의 malloc은 함수이고, C++에서의 new는 연산자이다!!! (C++에서도 C에서처럼 malloc 사용 가능!ㅋ 하지만 사용할 수 없는 경우도 있어..)
+// => new는 malloc이 할 수 없는 일까지도 한다!! 근데 그게 무엇!?!?
+#if 0
+#include <iostream>
+#include <stdlib.h>
+using namespace std;
+
+void main(void)
+{
+	int * np = new int;
+	int ** npp = new int *;
+
+	cout << *(int *)((char *)np - 16) << endl;
+	cout << *(int *)((char *)npp - 16) << endl;
+
+	delete np;
+	delete npp;
+
+
+	int size;
+	char * cp = new char;
+	char ** cpp = new char *;
+	char * acp = new char[13];
+
+	cout << *(int *)(cp - 16) << endl;
+	cout << *(int *)((char *)cpp - 16) << endl;
+
+	cout << "Size : ";
+	cin >> size;
+
+	cout << *(int *)(acp - 16) << endl;	// 13이 출력될 것!!
+
+
+	delete cp;
+	delete cpp;
+	delete acp;
+}
+
+#endif
+
+
+
+
+
+// ★ 문자열 입력 받는 갯수만큼 + 1 할당 ★
+#if 0
+#include <iostream>
+#include <string.h>
+using namespace std;
+
+void main(void)
+{
+	char temp[100];
+	int len;
+	int i;
+	int cnt;
+	char * * str;
+
+	cout << "Count : ";
+	cin >> cnt;
+
+	str = new char *[cnt];
+
+	for (i = 0; i < cnt; i++)
+	{
+		cout << "String Input : ";
+		cin.clear();
+		cin.ignore(cin.rdbuf()->in_avail());
+		cin.getline(temp, 100);	// 최대 99자까지 받고, 그보다 초과되는 부분은 무시됨!!
+		// 얘가 cin >> temp;와 비슷한데, 100 - 1자까지 받도록 한다!!
+
+		len = strlen(temp);
+		str[i] = new char[++len];	// NULL문자까지 포함하기 위해서!
+
+		strcpy_s(str[i], len, temp);	// 동적할당이므로 인수를 3개 써야 함!!
+	}
+
+	for (i = 0; i < cnt; i++)	cout << str[i] << endl;
+
+	for (i = 0; i < cnt; i++)	delete [] str[i];	// ★new + 배열일 때는 delete + 배열로 반환하자!1
+	
+	delete [] str;
+}
+#endif
+
+
+
+
+
+// 이름 없는 공용체
+#if 0
+#include <iostream>
+using namespace std;
+
+/*static union
+{
+	long data;
+	short word;
+	char byte;
+};*/
+
+void main(void)
+{
+	union
+	{
+		long data;
+		short word;
+		char byte;
+	};
+
+	data = 0x12345678;
+	cout << hex << word << endl;
+	cout << hex << (int)byte << endl;
+}
+
+#endif
+
+
+
+
+// 공간이름(namespace)과 예약어 using
+// 과거의 코드를 그대로 가져다 쓰면, 내가 쓰던 변수 이름과 가져온 코드의 이름이 중첩되는 경우가 있어!
+// => 다른 공간에 두어 중첩을 피함!
+#if 0
+#include <iostream>
+using namespace std;
+namespace A{
+	int no = 5;
+	void sub(void)
+	{
+		cout << no << endl;
+	}
+}
+namespace B{
+	int no = 10;
+	void sub(void)
+	{
+		cout << no << endl;
+	}
+}
+//void sub(void);
+
+
+int no = 30;
+
+void main(void)
+{
+	A::sub();
+
+	B::sub();
+
+	//sub();
+
+	using namespace A;
+	sub();		// A라는 공간의 sub임!!
+
+	using namespace B;
+	sub();		// 얘는 에러다!! 이미 위에 A 공간을 사용하겠다고 선언을 했기 때문에...
+	B::sub();	// 그래서 B의 scope를 밝혀야 함!!
+}
+
+/*
+void sub(void)
+{
+	cout << no << endl;
+}*/
+#endif
+
+// 예시
+#if 0
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
+void main(void)
+{
+					// 10자리
+	cout << left << setw(10) << "Seoul " << 10 << endl;
+			// 왼쪽 정렬
+
+	int left = 5;
+	cout << left << setw(10) << "Seoul " << 10 << endl;	// 얘는 left가 변수이고, 5로 초기화 되어 잇기 때문에 5가 출력 됨
+
+	cout << std::left << setw(10) << "Seoul " << 10 << endl; // 혼동을 막기 위해 scope 설정!
+}
+#endif
