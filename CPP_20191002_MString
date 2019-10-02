@@ -1,0 +1,153 @@
+// <MString.h>
+#pragma once
+#ifndef _MSTRING_H_
+#define _MSTRING_H_
+
+class MString
+{
+	char * m_str;
+public:
+	MString();
+	explicit MString(const char * str);
+	~MString();
+	const char * GetString(void) const;
+	MString & operator =(const MString & rstr);
+	MString & operator =(const char * pstr);
+
+};
+
+#endif	/ _MSTRING_H_
+
+
+
+
+
+// <MString.cpp>
+#include <iostream>
+using namespace std;
+#include "MString.h"
+
+MString::MString()
+{
+	m_str = "";	// 쓰레기 값을 갖지 않도록! 이렇게 초기화
+}
+
+
+MString::MString(const char * str)
+{
+	size_t len;
+
+	len = ::strlen(str);
+	if (len == 0)
+	{
+					// '\0'은 0번지(NULL문자 자체)를 나타내지, NULL문자가 저장된 주소를 나타내지 않음!
+		m_str = "";	// ""는 NULL문자가 저장된 곳의 주소를 나타냄! => 이를 통해 cout 같은 애들도 얘를 알아서 넘어가도록 해줌!
+					// 누군가 얘를 access 하려고 하면, NULL을 보고 다시 끝남!
+	}
+	else
+	{
+		m_str = new char[++len];
+		::strcpy_s(m_str, len, str);
+	}
+}
+
+
+
+MString::~MString()
+{
+	// 생성자에서 else 문을 경유한다면, 얘는 성립하지만, 반대로 만약 len == 0이 되면...? 계속 지워주는 거 아냐? 런타임 에러 아냐!?!?
+	if(*m_str != '\0') delete[] m_str;
+}
+
+
+const char * MString::GetString(void) const
+{
+	return m_str;
+}
+// 리턴된 m_str 자체를 변경시킬 수 없기 때문에 const char * 형 리턴으로 놔줄 필요는 없어.
+/* 하지만 char * p = bb.GetString();으로 p값을 받아줬을 때,
+   *p ~~... 와 같은 방법으로 m_str 내의 문자를 바꿀 수 있기 때문에
+   char * 보다는 const char * 로 리턴해주면 좋을 것!*/
+
+
+// 디폴트 문자열 = 연산자의 구조! -> 같은 "Seoul"이라는 정보를 담고 있다기 보다는, 두 변수가 같은 곳의 주소를 보유하고 있음.
+// 그래서 동적 할당을 한 후, 나중에 풀어줄 때 같은 곳이 두 번이나 delete 되어 Runtime Error가 발생함;;;
+/*
+		MString & MString::operator =(const MString & rstr)
+		{
+			m_str = rstr.m_str;
+
+			return *this;
+		}
+*/
+// 이렇게 따로 동적할당을 해준 후, 그 곳에 문자열을 복사하여 후에 같은 곳을 두 번이나 반납해주는 일이 발생되지 않도록 함!
+MString & MString::operator =(const MString & rstr)
+{
+	size_t len;
+
+	// bb = bb; 라고 선언했다면, 자기꺼를 지워버리는 문제도 있어..;;
+	// 호출한 개체의 주소(this)와 호출 받은(당한) 개체인 rstr의 주소(&rstr)이 같은지 확인하고, 같으면 걍 넘어가도록!
+	if (this == &rstr) return *this;
+
+	// 기존에 m_str이 다른 문자열을 가지고 있었다면? && 멤버 변수를 동적 할당하여 주소값을 가지고 있었던 경우
+	if (*m_str != '\0') delete [] m_str;
+
+	// 기존에 m_str이 널값, 즉 아무 문자도 가지고 있지 않았다면?
+	len = ::strlen(rstr.m_str);
+	if (len == 0) m_str = "";
+	else
+	{
+		m_str = new char [++len];
+		::strcpy_s(m_str, len, rstr.m_str);
+	}
+	return *this;	// ★다중 대입을 지원하기 위해서 호출한 놈을 리턴해줌!!!
+}
+
+
+// 개체 = 개체; 해주는 것이 아니라, 개체 = 문자열; 해주는 경우에는 개체 간의 주소가 같을 수 없기 때문에 그 조건만 빼줌 됨!
+MString &  MString::operator =(const char * pstr)
+{
+	size_t len;
+
+	if (*m_str != '\0') delete[] m_str;
+
+	len = ::strlen(pstr);
+	if (len == 0) m_str = "";
+	else
+	{
+		m_str = new char[++len];
+		::strcpy_s(m_str, len, pstr);
+	}
+
+	return *this;
+}
+
+
+
+
+
+// <Main.cpp>
+#include <iostream>
+using namespace std;
+#include "MString.h"
+
+void main(void)
+{
+	MString aa, bb("Seoul");
+
+	cout << aa.GetString() << endl;	// aa가 가지고 있던 값은 NULL이므로 아무 것도 출력 안 함!
+	cout << bb.GetString() << endl;	// bb가 가지고 있는 문자열의 주소를 리턴하면 됨!
+
+	
+	bb = bb;
+	aa = bb;		// 디폴트 오퍼레이터 이꿜보다 내가 정의한 오퍼레이터 이퀄을 우선순위로 사용함! RTE 안남!!
+	cout << aa.GetString() << endl;
+
+
+	aa = "KOREA";		/* 문자열을 하나 받는 생성자가 explicit이 아니었을 때는, 
+						   그 생성자에 우회 접근(?)하여 aa 멤버 변수에 "KOREA"(주소)가 들어가게 됨! */
+	cout << aa.GetString() << endl;
+}
+
+
+
