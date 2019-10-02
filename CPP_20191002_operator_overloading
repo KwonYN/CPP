@@ -19,6 +19,7 @@ public:
 	MPoint operator -(int n) const;
 	bool operator ==(const MPoint & pt) const;
 	bool operator !=(const MPoint & pt) const;
+	MPoint & operator =(const MPoint & pt);
 	MPoint & operator ++(void);
 	const MPoint operator ++(int);
 	MPoint & operator --(void);
@@ -31,6 +32,8 @@ public:
 
 
 #endif // _MPOINT_H_
+
+
 
 
 
@@ -126,6 +129,17 @@ bool MPoint::operator ==(const MPoint & pt) const
 bool MPoint::operator !=(const MPoint & pt) const
 {
 	return (bool)!(operator ==(pt));
+}
+
+
+// 2.11 default 대입 연산자함수와 대입 연산자함수의 중복
+// 각 개체의 멤버대 멤버를 1:1로 대입 시켜주는 연산자(확장) && 우 -> 좌 방향으로 대입 되도록!
+MPoint & MPoint::operator =(const MPoint & pt)
+{
+	x = pt.x;
+	y = pt.y;
+
+	return *this;
 }
 
 
@@ -262,6 +276,8 @@ void main(void)
 	++aa = bb;
 	//aa++ = bb;		// 그래서 얘를 오류 뜨게 만들기 위해 리턴 타입을 const로 해줘야 함!! 그렇지 않으면 컴파일러가 이거 못 잡아냄!
 
+
+	aa = bb = cc;	// aa에 대입이 될 것
 
 }
 
