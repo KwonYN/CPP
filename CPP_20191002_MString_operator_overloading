@@ -9,14 +9,25 @@ class MString
 public:
 	MString();
 	explicit MString(const char * str);
+	MString(const MString & rstr);		// 복사 생성자
+	MString(MString && rstr);			// 이동 생성자
 	~MString();
 	const char * GetString(void) const;
 	MString & operator =(const MString & rstr);
 	MString & operator =(const char * pstr);
+	operator const char *(void) const;
+	char & operator [](int idx) const;
+	char & operator *(void) const;
+	char * operator +(int idx) const;
+	MString & operator +(const MString & rstr);
 
+	//operator +(const MString && mm);
+	/* 어쩔 수 없이 addr이나 reference가 아닌 value값으로 리턴을 해야 하는 경우?
+	   => 팜조가 아니라 value로 와야 한다! */
 };
 
 #endif	/ _MSTRING_H_
+
 
 
 
@@ -56,29 +67,67 @@ MString::MString(const char * str)
 MString::~MString()
 {
 	// 생성자에서 else 문을 경유한다면, 얘는 성립하지만, 반대로 만약 len == 0이 되면...? 계속 지워주는 거 아냐? 런타임 에러 아냐!?!?
-	if(*m_str != '\0') delete[] m_str;
+	if(*m_str != '\0') delete [] m_str;
 }
 
 
+
+// 2.12 복사 생성자함수(copy constructor)
+/*
+	1) 생성자는 리턴 타입이 존재하지 않기 때문에 자기 자신을 리턴할 필요 없음
+	2) 이제 막 개체가 생성된 것이기 때문에 기존에 메모리가 없을 것이라서 지워줄 필요 없음
+	3) 자기 자신이 대입되지도 않을 것
+*/
+MString::MString(const MString & rstr)
+{
+	size_t len;
+
+	len = ::strlen(rstr.m_str);
+	if (len == 0) m_str = "";
+	else
+	{
+		m_str = new char[++len];
+		::strcpy_s(m_str, len, rstr.m_str);
+	}
+}
+
+
+
+// ★ 호출한 imsi 개체와 호출 받은 개체가 하는 일들을 확 줄여주는 일
+// => 고 코스트의 코딩을 줄일 수 있음!
+// 2.14 이동 생성자함수(move constructor)
+MString::MString(MString && rstr)
+{
+	// return된 MString 타입의 imsi 개체의 m_str 
+	m_str = rstr.m_str;
+	rstr.m_str = "";
+}
+
+
+
+// 리턴된 m_str 자체를 변경시킬 수 없기 때문에 const char * 형 리턴으로 놔줄 필요는 없어.
+/*
+	하지만 char * p = bb.GetString();으로 p값을 받아줬을 때,
+	*p ~~... 와 같은 방법으로 m_str 내의 문자를 바꿀 수 있기 때문에
+	char * 보다는 const char * 로 리턴해주면 좋을 것!
+*/
 const char * MString::GetString(void) const
 {
 	return m_str;
 }
-// 리턴된 m_str 자체를 변경시킬 수 없기 때문에 const char * 형 리턴으로 놔줄 필요는 없어.
-/* 하지만 char * p = bb.GetString();으로 p값을 받아줬을 때,
-   *p ~~... 와 같은 방법으로 m_str 내의 문자를 바꿀 수 있기 때문에
-   char * 보다는 const char * 로 리턴해주면 좋을 것!*/
+
+
 
 
 // 디폴트 문자열 = 연산자의 구조! -> 같은 "Seoul"이라는 정보를 담고 있다기 보다는, 두 변수가 같은 곳의 주소를 보유하고 있음.
 // 그래서 동적 할당을 한 후, 나중에 풀어줄 때 같은 곳이 두 번이나 delete 되어 Runtime Error가 발생함;;;
 /*
-		MString & MString::operator =(const MString & rstr)
-		{
-			m_str = rstr.m_str;
+	MString & MString::operator =(const MString & rstr)
+	{
+		m_str = rstr.m_str;
 
-			return *this;
-		}
+		return *this;
+	}
 */
 // 이렇게 따로 동적할당을 해준 후, 그 곳에 문자열을 복사하여 후에 같은 곳을 두 번이나 반납해주는 일이 발생되지 않도록 함!
 MString & MString::operator =(const MString & rstr)
@@ -100,8 +149,9 @@ MString & MString::operator =(const MString & rstr)
 		m_str = new char [++len];
 		::strcpy_s(m_str, len, rstr.m_str);
 	}
-	return *this;	// ★다중 대입을 지원하기 위해서 호출한 놈을 리턴해줌!!!
+	return *this;	// ★다중	을 지원하기 위해서 호출한 놈을 리턴해줌!!!
 }
+
 
 
 // 개체 = 개체; 해주는 것이 아니라, 개체 = 문자열; 해주는 경우에는 개체 간의 주소가 같을 수 없기 때문에 그 조건만 빼줌 됨!
@@ -123,6 +173,54 @@ MString &  MString::operator =(const char * pstr)
 }
 
 
+// 2.15 형변환(cast) 연산자함수
+// 캐스팅 함수는 리턴 써주지 않기로 약속!
+MString::operator const char *(void) const
+{
+	return m_str;	// cc가 호출한 것이기 대문에 그냥 m_str 리턴해주면 됨!
+}
+
+
+// 2.16 배열 연산자함수(operator [])
+char & MString::operator [](int idx) const	// 반드시 멤버 함수로만 넣을 수 있다!
+{									// m_str이 바뀌는 것이 아니라, 가리키는 대상이 바뀔 뿐이므로 const....;;
+	return m_str[idx];
+}
+
+
+
+// 2.17 포인터 연산자함수(operator *)
+// ★★ 리턴 타입이 &(참조)인 경우는, "리턴 값으로 넣을 공간을 준다!"는 의미이다!! ★★
+char & MString::operator *(void) const
+{
+	return *m_str;
+}
+
+
+char * MString::operator +(int idx) const	// 얘도 함수 내에서 값을 바꾸는 것이 아니라 주소를 다른 것으로.. 그냥 읽기만 하잖아?
+{
+	return (m_str + idx);
+}
+
+
+
+MString & MString::operator +(const MString & rstr)
+{
+	size_t len1, len2;
+
+	len1 = ::strlen(m_str);
+	len2 = ::strlen(rstr.m_str);
+
+	if (len1 + len2 == 0) return *this;
+
+	MString temp(m_str);
+
+	::strcat_s( temp.m_str, len1 + len2 + 1, rstr.m_str );
+
+	return temp;
+}
+
+
 
 
 
@@ -130,6 +228,8 @@ MString &  MString::operator =(const char * pstr)
 #include <iostream>
 using namespace std;
 #include "MString.h"
+
+MString sub(void);
 
 void main(void)
 {
@@ -147,7 +247,56 @@ void main(void)
 	aa = "KOREA";		/* 문자열을 하나 받는 생성자가 explicit이 아니었을 때는, 
 						   그 생성자에 우회 접근(?)하여 aa 멤버 변수에 "KOREA"(주소)가 들어가게 됨! */
 	cout << aa.GetString() << endl;
+
+
+	MString cc = aa;	// 2.12 복사 생성자함수(copy constructor)
+
+
+	cout << (const char *)cc << endl;	// 이렇게 형변환 캐스팅 연산자 사용해줘도 안되는 건 안된다구...
+										// 연산자인데 기능의 한계가 있다구? => 그럼 확장 해주면 되잖아 ㅎㅎ 연산자 중복정의!!
+	cout << cc << endl;	// 이렇게 캐스팅 안 해줘도 가능한게, 컴파일러가 암묵적으로 타입 형태에 맞는 캐스팅 연산자를 암묵적으로 호출한닫고 함!
+	cout << ::strlen(aa) << endl;	// 얘도 바로 위의 이유와 마찬가지...!
+
+
+	MString qq("KOREA"), ww("seoul");
+	sub();		// 전역함수
+	cout << aa[0] << endl;
+	aa[0] = 'S';	// aa.operator [](0);로 수정 가능!!
+	cout << aa[0] << endl;
+
+
+	*(aa + 2) = 'K';			// 캐스팅 함수가 const char *이기 때문에 함부로 못 바꿈...;
+	cout << *(aa + 2) << endl;
+
+
+
+	cc = aa + bb;	// 문자열이 합쳐질 수 있도록!
+	cout << cc.GetString() << endl;
 }
 
 
+MString sub(void)
+{
+	MString aa("seoul");
+
+	return aa;	// MString 타입의 imsi변수 = aa;로 리턴됨.-> 얘는 곳 MString imsi(aa); -> 복사생성자 생성됨!
+	// 그런데 참조가 아니라 value로 만들어주면, 계속 계속 복사생성자를 계속한다!!
+	// 그런데 함수가 끝나면 소멸되는 이런 임시 변수를 위해 긴 코드를 수행하기에는.. 너무 비효율 적이야!
+	/*  1) 컴파일 회사에서 ...
+	2) 문법적으로 해결? => 이동 생성자!! */
+}
+
+
+
+
+
+/*
+	// ostream 클래스에는 문자열을 출력하는 << 연산자가 이런 식으로 정의되어 있지 않을까?
+	ostream & ostream::operator <<(const char * str)
+	{
+		::printf("%s", str);
+
+		return *this;
+	}
+*/
 
