@@ -1,0 +1,268 @@
+// <MPoint.h>
+#pragma once		// #ifndef _SCORE_H_ 이것과 똑같은 역할!
+#ifndef _MPOINT_H_
+#define _MPOINT_H_
+
+class MPoint
+{
+	int y, x;
+public:
+	MPoint();		// 디폴트 생성자
+	explicit MPoint(int n);
+	MPoint(int y, int x);
+	~MPoint();		// 디폴트 소멸자
+
+	void PrintPos(void) const;	// 멤버데이터를 읽기만 하니까 const 멤버 함수
+	MPoint operator +(const MPoint & pt) const;
+	MPoint operator +(int n) const;				// 연산자 중복 정의
+	MPoint operator -(const MPoint & pt) const;
+	MPoint operator -(int n) const;
+	bool operator ==(const MPoint & pt) const;
+	bool operator !=(const MPoint & pt) const;
+	MPoint & operator ++(void);
+	const MPoint operator ++(int);
+	MPoint & operator --(void);
+	const MPoint operator --(int);
+
+	friend MPoint operator +(int n, const MPoint & pt);	// 멤버 함수는 아니고, static도 멤버함수이기 때문에 아님. friend 함수로 선언해주자!
+														// MPoint 없이는 얘 쓸모 없고, 얘 없으면 MPoint 개체는 교환법칙 못 하니까!
+	friend ostream & operator <<(ostream & c, const MPoint & pt);
+};
+
+
+#endif // _MPOINT_H_
+
+
+
+
+// <MPoint.cpp>
+#include <iostream>
+using namespace std;
+#include "MPoint.h"
+
+MPoint::MPoint()
+{
+	//cout << "Default Constructor of MPoint class" << endl;
+	//cout << "사실 아무 정의 안해주어도 garbage 값이지만, 멤버 데이터 타입에 맞추어 초기화 해주긴 함!" << endl;
+}
+
+
+MPoint::MPoint(int n)
+{
+	y = x = n;
+	//cout << "MPoint(int n) Constructor of MPoint class" << endl;
+}
+
+
+MPoint::MPoint(int y, int x)// : x(x), y(y) - 아래처럼 대입하지 말고 이렇게 해줘도 되기는 함!
+							//				 하지만 '상속' 개념으로 넘어가면 이것이 적용되지 않는다고 함(?)
+{
+	this->y = y;
+	this->x = x;
+	//cout << "MPoint(int y, int x) Constructor of MPoint class" << endl;
+
+}
+
+
+MPoint::~MPoint()
+{
+	//cout << "Default Destructor of MPoint class" << endl;
+}
+
+
+void MPoint::PrintPos(void) const
+{
+	cout << y << " " << x << endl;
+}
+
+
+/* temp는 리턴 후에 없어질 변수. 이것을 MPoint 타입의 어떤 변수의 별명으로 준다? Nope!
+그래서 Reference가 아닌 Value로 리턴해야 함!*/
+MPoint MPoint::operator +(const MPoint & pt) const
+{
+	// 호출한 놈의 x, 호출된 놈의 x
+	MPoint temp(y + pt.y, x + pt.x);
+
+	return temp;
+}
+
+
+MPoint MPoint::operator +(int n) const
+{
+	// 호출한 놈의 x, 호출된 놈의 x
+	MPoint temp(y + n, x + n);
+
+	return temp;
+}
+
+
+MPoint MPoint::operator -(const MPoint & pt) const
+{
+	// 호출한 놈의 x, 호출된 놈의 x
+	MPoint temp(y - pt.y, x - pt.x);
+
+	return temp;
+}
+
+
+MPoint MPoint::operator -(int n) const
+{
+	// 호출한 놈의 x, 호출된 놈의 x
+	MPoint temp(y - n, x - n);
+
+	return temp;
+}
+
+
+// 참이냐 거짓이냐를 리턴하는 bool 타입형 리턴
+// 인자의 값들을 읽기만 할 것이라서 인자는 const 타입, 그리고 이 함수는 값을 읽어주기만 하는 것이므로 const 함수 타입
+bool MPoint::operator ==(const MPoint & pt) const
+{
+	if (y == pt.y && x == pt.x) return true;
+	else return false;
+}
+
+
+bool MPoint::operator !=(const MPoint & pt) const
+{
+	return (bool)!(operator ==(pt));
+}
+
+
+// 전위 ++ ( ex. ++aa )
+MPoint & MPoint::operator ++(void)
+{
+	*this = *this + 1;
+
+	return *this;		// ★리턴 타입이 참조인 경우와 value인 경우?★
+}
+
+
+// 후위 ++ ( ex. aa++ )
+const MPoint MPoint::operator ++(int dummy)
+{
+	*this = *this + 1;
+
+	return *this - 1;	// 얘는 없어질 애이기 때문에 MPoint 참조가 아닌 value로 보내줘야 함!
+}
+
+
+// 전위 -- ( ex. --aa )
+MPoint & MPoint::operator --(void)
+{
+	*this = *this - 1;
+
+	return *this;		// ★리턴 타입이 참조인 경우와 value인 경우?★
+}
+
+
+// 후위 -- ( ex. aa-- )
+const MPoint MPoint::operator ++(int dummy)
+{
+	*this = *this - 1;
+
+	return *this + 1;	// 얘는 없어질 애이기 때문에 MPoint 참조가 아닌 value로 보내줘야 함!
+}
+
+
+MPoint operator +(int n, const MPoint & pt)		// 전역 함수는 const로 선언하여 사용할 수 없음!
+						// 그리고 읽기만 하니까 const로 인자를 넘겨줌!
+{
+	
+	MPoint temp(n + pt.y, n + pt.x);	// -> friend를 써서 접근할 수도 있음
+
+	return temp;
+	
+
+	//return pt + n;	// 이렇게 해주는 것도 가능. 하지만 또 다른 call이 일어나는 것이기 때문에 부정적으로 보는 견해도
+}
+
+
+ostream & operator <<(ostream & c, const MPoint & pt)
+{
+	//c << pt.y << " " << pt.y << endl;	=> 굳이 이렇게 안 해줄 필요가 있을까?
+	pt.PrintPos();
+
+	return c;
+}
+
+
+
+
+// <Main.cpp>
+#include <iostream>
+using namespace std;
+#include "MPoint.h"
+
+void main(void)
+{
+	MPoint aa(5, 2), bb(4), cc;
+
+	aa.PrintPos();
+
+	// 대입은 기본적으로 가능
+	cc = aa;		// 이렇게 대입할 수 있음 Oh....
+	cc.PrintPos();
+
+	// Object끼리의 +연산 함수 만들어줌
+	// aa.operator +(bb);
+	cc = aa + bb; // 더해주고 싶은데 컴파일러에서 이 기능을 제공해주지 않음.. => 연산자 중복 정의!!! by 연산자 함수
+				  // 그래서 만든 함수가 MPoint MPoint::operator +(const MPoint & pt) const;
+	cc.PrintPos();
+
+	// Object끼리의 -연산 함수 만들어줌
+	// aa.operator -(bb);
+	cc = aa - bb;
+	cc.PrintPos();
+
+	// +연산 함수 오버로딩
+	// aa.operator +(3);
+	cc = aa + 3; // operator overloading으로 중복정의 가능! MPoint MPoint::operator +(int n) const;
+				 /* 하지만 const MPoint & pt 타입이 아니더라도 생성자 MPoint::MPoint(int n)를 경유하여 
+					y = x = 3;으로 초기화된 MPoint 타입 변수가 만들어져 인자로 들어가게 됨...*/
+				 /* 하지만 explicit MPoint(int n);로 다시 선언을 해주면, 
+					위처럼 암묵적인 변환으로 Object가 생성되지 않고, 명시적으로만 생성되도록 해줌!! */
+				 // 따라서 MPoint MPoint::operator +(int n) const; 얘를 선언해주고 정의해줘야 함!
+	cc.PrintPos();
+
+	// -연산 함수 오버로딩
+	// aa.operator -(5);
+	cc = aa - 5;
+	cc.PrintPos();
+
+	// 전역 함수로 만들어줌 (+연산 함수 오버로딩한 함수와 인자가 똑같애지 잖아!)
+	// operator +(3, aa);
+	cc = 3 + aa;	// 교환법칙 되도록 만들어줌
+	cc.PrintPos();
+
+
+	// 본래 cout.operator <<(cc);로 호출하여 보내지 않을까?
+	// operator <<(cout, cc);로 보내는 것 전역함수로 만들어보자!
+	cout << cc << endl;
+	
+
+	// aa = bb; // 이거 주석 지우고 사용하면, aa에 bb가 대입되므로 밑의 조건문은 참이 됨!
+	// 개체 aa가 이 함수를 호출하여 인자로 받응 bb와의 각 멤버 변수가 모드 같은지를 확인하는 함수!
+	// bool MPoint::operator ==(MPoint & pt) const;
+	// aa.operator ==(bb);
+	if (aa == bb)
+	{
+		cout << "equal" << endl;
+	}
+	else cout << "not equal" << endl;
+
+
+	/*
+	aa++;	// 증가되기 전의 값이 옴!	=> aa.operator ++(0);	- dummy 값을 인수로 받음
+	++aa;	// aa 공간 자체가 옴!		=> aa.operator ++();	- 인수를 받지 않음
+	// => 그렇기 때문에 ++, -- 연산자는 전위, 후위가 각각 다름. 컴파일러가 다르게 번역!!
+	*/
+	cc = ++aa;		// int n;	++n = 0; => n = 0;으로 덮힘
+	cc = aa++;		// int n;	n++ = 0; => 컴파일 에러가 남
+	++aa = bb;
+	//aa++ = bb;		// 그래서 얘를 오류 뜨게 만들기 위해 리턴 타입을 const로 해줘야 함!! 그렇지 않으면 컴파일러가 이거 못 잡아냄!
+
+
+}
+
+
