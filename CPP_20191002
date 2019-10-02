@@ -1,0 +1,226 @@
+/***********************************************************************/
+/*							[ 2019.10.02 수 ]						   */
+/***********************************************************************/
+
+// 2.12 복사 생성자함수(copy constructor)
+#if 0
+#include <iostream>
+using namespace std;
+
+class A
+{
+	int no;
+	char ch;
+public:
+	A(){};
+	A(int n, char c) : no(n), ch(c) {};
+	A(const A &ra);
+	void sub(void) { cout << no << " " << ch << endl; };
+};
+
+// 컴파일러가 자동으로 만들어주는 "디폴트 복사 생성자 함수"
+/*
+		A(A ra);	// 자기 자신을 "참조"하는 생성자 함수가 아니라면, RTE 발생!
+		Why?
+		: A ra = aa; (== A ra(aa);)라는 생성자 함수를 호출할 것이고.
+		그럼 계속 A(A ra); 라는 생성자 함수를 계에에에엥에ㅔ속 호출하는 것이기 때문에 RTE 발생!!
+*/
+A::A(const A &ra)
+{
+	no = ra.no;
+	ch = ra.ch;
+}
+
+
+void main(void)
+{
+	A aa(5, 'A');
+	aa.sub();
+
+	A bb = aa;	// bb.operator =(aa); 라는 함수가 호출되는 것 아님!! 지금 이 식은 "선언 && 초기화 식"임!!
+				// ★ A bb(aa); 생성자 함수 호출!	얘가 호출되는 것! 자동으로 A 타입 인자를 받는 생성자 함수 만들어 주는 것★
+	bb.sub();
+}
+
+#endif
+
+
+
+
+// [★★★★★]
+// 2.13 R-value 참조	( L-value : 저장 공간 // R-value : 상수 )
+#if 0
+#include <iostream>
+using namespace std;
+
+int & sub(int & nn)	// 그냥 int nn을 인자로 받아주면 또 다른 기억공간이 만들어져 거기에 저장하게 됨!
+{
+	return nn;
+}
+
+int func(void)
+{
+	int n = 5;
+
+	return n;
+}
+
+void main(void)
+{
+	int n = 5;
+
+
+	int & k = n;	// L-value 참조
+
+
+	int && r = 5;	// R-value 참조 (상수형 참조)
+	r = 10;			// R-value 참조는 const형 참조와 달리 값 변경 가능
+	cout << r << endl;
+
+
+	const int & c = 10;
+	cout << c << endl;
+	//c = 5;			// const 형으로 선언됐기 때문에 값 변경 불가!
+
+
+	// ★ 참조에 대한 이해 필요!! ★
+	int & res1 = ++n;
+	int && res2 = n++;	// 임시값을 받고 그 임시값을 변경해양할 때
+
+
+	// ★ 참조에 대한 이해 필요!! ★
+	int & s1 = sub(n); // int & 타입의 리턴이므로 그 공간(노 임시!)이 안 없어진 것. -> L-value 참조로 받아야...;;
+	// l-value 참조 변수인 s1에 대한 다른 공간이 마련되는 것 아님.
+
+	int && s2 = func();// 함수 안에서 n이 임시에 만들어져 n이 대입됨. n은 함수 끝나면서 공간 없어짐.
+	// r-value 참조 변수인 s2에 대한 다른 공간이 마련되는 것.
+	// 이러한 R-value 참조는 "2.14 이동 생성자함수(move constructor)"에서 필요!!
+}
+#endif
+
+
+
+//2.14 이동 생성자함수(move constructor)
+#if 0
+#include <iostream>
+using namespace std;
+
+class A
+{
+	int no;
+public:
+	A(){ cout << "Default Cons ..." << endl; };							// 디폴트 생성자
+	A(int n) : no(n) { cout << "Integer Cons ..." << endl; };
+	A(const A & ra) : no(ra.no) { cout << "Copy Cons ..." << endl; };	// 복사 생성자
+	A(A && ra) { cout << "Move Cons ..." << endl; };					// 이동 생성자
+	// 이동 생성자 : 잠깐 만들어졌다가 곧 소멸될 임시 개체에 대해서 복사 생성자보다 우선해서 생성되게 됨!
+	// 그냥 막 복사하기 위한 생성자를 사용하는 것이 아니라, 비교적 저렴한 이동을 위한 생성자를 호출하는 것이 효율적! 
+	// 복사 생성자보다 저렴한 비용의 코드! 그렇기 때문에 개체 내의 정보의 이동은 복사 생성자보다 효율적으로 "코더"가 짜야 함!!
+	~A(){ cout << "Des ..." << endl; };
+};
+
+A sub(void)
+{
+	A aa;
+	return aa;	// (value로 리턴) ★imsi Object★를 만들고, 그것을 리턴!-> "des..." 라는 메시지 뜰 것이다~
+					// A imsi(aa); -> 원래 복사생성자가 호출되는데, 없으므로 디폴트 생성자로 임시 개체가 초기화 될 것!
+					// (cf> 2.12 복사 생성자함수(copy constructor) 참고)
+					// => 복사 생성자 함수가 호출 된다면
+
+
+	//return A();		// NRVO ( Return Value Optimazation )
+}
+
+void main(void)
+{
+	// 1) 임시 생성자 변수가
+	//sub();		// => "des..." 라는 메시지 2개
+	A res = sub();	// => "des..." 라는 메시지 2개 -> but, 위치가 다름!!
+
+	// 2) 이동 생성자가
+	cout << "end main" << endl; // // => "des..." 라는 메시지 2개 -> but, 위치가 다름!!
+}
+#endif
+
+// 
+#if 0
+#include <iostream>
+using namespace std;
+
+class A
+{
+	int no;
+public:
+/*
+	//A(){};				   이런 기본 생성자를 만들지 않고,
+	A(int n) : no(n) {};	// 다른 생성자를 만들었다면? => 컴파일러는 디폴트 생성자를 자동으로 만들어주지 않음!
+	//A(const A & ra){};	   기본 복사생성자는 기본을오 제공!
+	A(A && ra) {};			// 단, 이동 생성자를 만들지 않았을 경우에만 복사생성자 기본으로 제공..!!;;
+*/
+
+	A() = default;
+	A(int n) : no(n) {};
+	A(const A & ra) = default;		// 이런 식으로 default 값을 정의해놓으면, 디폴트로 이것들이 우선순위로 실행!!
+	A(A && ra) {};
+};
+
+void main(void)
+{
+	A aa;
+	A bb(aa);
+}
+
+#endif
+
+
+
+
+
+
+
+// 2.18 위치지정(placement) 초기화의 new : 미리 할당을 해놓고, 나중에 원할 때 다시 초기화!
+#if 01
+#include <iostream>
+using namespace std;
+#include <stdlib.h>
+
+class A
+{
+	int no;
+public:
+	A(){};
+	A(int n) : no(n) {};
+	int sub(void){ return no; };
+};
+
+void main(void)
+{
+	// 2.18 위치지정(placement) 초기화의 new : 미리 할당을 해놓고, 나중에 원할 때 다시 초기화!
+	/*
+	int no;
+
+	int * np = new (&no) int (15);	// 정적 공간 할당이래..!!
+	cout << *np << endl;
+
+	
+	int * p = new int;				// 동적 공간 할당!
+	int * ap = new (p) int(5);
+
+	cout << *ap << endl;
+
+	delete ap;	// ★ap로 반환하는게 맞다고 함!!★
+	*/
+
+
+	//A * p = new A;			// Object를 생성하면서 동적할당! (이 때는 티폴트 생성자를 호출하게 되겠지?)
+	A * p = (A *)malloc(sizeof(A));	// malloc으로 해주는 경우가 많다고..;;
+
+	A * ap = new (p)A(5);	// ★메모리 할당 하는 것 아님!★ 이 때 ★int 생성자를 Call★ 하는 것!!!!
+
+	ap->~A();	// 필요하다면 소멸할 수 있음. 가지고 있던 자원을 반납! 하지만 개체 자체가 풀린 것 아니야!!
+				// 그러면 다시 생성자를 불러낼 수 있어!!
+
+
+}
+
+#endif
