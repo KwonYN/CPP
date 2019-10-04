@@ -1,0 +1,507 @@
+// <MyKey.h>
+#pragma once
+#include "KeyCtl.h"
+class MyKey :
+	public KeyCtl
+{
+	int x, y;		// 원하는 좌표점에
+	char ch;		// 원하는 문자를
+	int color;		// 원하는 색깔로 뿌려주겠다!
+public:
+	MyKey();
+	~MyKey();
+	void OnLeftDown(void);
+	void OnRightDown(void);
+	void OnUpDown(void);
+	void OnDownDown(void);
+	BOOL OnALTXDown(void);
+
+};
+
+
+
+
+
+
+// <KeyCtl.h>
+#ifndef _KEYCTL_H_
+#define _KEYCTL_H_
+
+#include "Console.H"
+
+class KeyCtl{
+public:
+	KeyCtl();
+	~KeyCtl();
+	void KeyProc(void);
+	virtual void DefaultProc(short code);
+	virtual void ASyncProc(void);
+	virtual void OnLeftDown(void);
+	virtual void OnRightDown(void);
+	virtual void OnUpDown(void);
+	virtual void OnDownDown(void);
+	virtual void OnPgUpDown(void);
+	virtual void OnPgDnDown(void);
+	virtual void OnEnterDown(void);
+	virtual void OnESCDown(void);
+	virtual void OnSpaceDown(void);
+	virtual BOOL OnALTXDown(void);
+};
+
+#endif // _KEYCTL_H_
+
+
+
+
+// <Console.H>
+#ifndef _CONSOLE_H_
+#define _CONSOLE_H_
+
+#include <windows.h>
+#include <conio.h>
+
+#define F1 		0x3B00
+#define F2		0x3C00
+#define F3 		0x3D00
+#define F4 		0x3E00
+#define F10 	0x4400
+#define LEFT 	0x4B00
+#define RIGHT 	0x4D00
+#define UP 		0x4800
+#define DOWN 	0x5000
+#define PGUP 	0x4900
+#define PGDN 	0x5100
+#define HOME 	0x4700
+#define END 	0x4F00
+#define ENTER 	0x000D
+#define BKSP	0x0008 
+#define ESC 	0x001B
+#define SPACE 	0x0020
+#define ALTX 	0x78E0
+
+union KEY {
+	short code;
+	struct {
+		char ascii;
+		char scan;
+	};
+};
+
+#define HitKbd() _kbhit()  // conio.h
+
+KEY GetKey(void);
+int InputInt(int x, int y, int * data);
+int InputString(int x, int y, char * data, size_t size);
+
+
+/* Color Value
+7   6   5   4   3   2   1   0  // Bit
+b   B   B   B   F   F   F   F  // Attribute
+ 
+In this 8-bit parameter,
+ - FFFF = 4-bit Foreground color (0 to 15)
+ - BBB  = 3-bit Background color (0 to 7)
+ -  b    = Blink(DOS) or Bright enable bit
+*/
+
+#define BLACK		0X00
+#define DBLUE 		0X01
+#define DGREEN 		0X02
+#define DCYAN		0X03
+#define DRED		0X04
+#define DMAGENTA	0X05
+#define DYELLOW		0X06
+#define DWHITE		0X07
+#define GRAY		0X08
+#define BLUE		0X09
+#define GREEN		0X0A
+#define CYAN		0X0B
+#define RED			0X0C
+#define MAGENTA		0X0D
+#define YELLOW		0X0E
+#define WHITE		0X0F
+
+void Cls(void);
+void SetDefColor(void);
+void SetTextColor(int bgcolor, int textcolor);
+void GotoXY(int x, int y);
+void WriteChar(int x, int y, char c, int color);
+size_t WriteString(int x, int y, const char * str, int color);
+size_t WriteInt(int x, int y, int data, int color);
+void Paint(int left, int top, int right, int bottom, int color);
+void Box(int left, int top, int right, int bottom, int style, int color);
+
+#endif // _CONSOLE_H_
+
+
+
+
+
+// <Mykey.cpp>
+#include "MyKey.h"
+#include "Console.H"
+
+
+MyKey::MyKey()	// 기본 생성자
+{
+	x = 40, y = 12;
+	ch = 'Y';
+	color = YELLOW;
+	::WriteChar(x, y, ch, color);
+}
+
+
+MyKey::~MyKey()
+{
+}
+
+
+void MyKey::OnLeftDown(void)
+{
+	::WriteChar(x, y, ' ', color);
+	if (x <= 0) x = 79;
+	else x--;
+	::WriteChar(x, y, ch, color);
+}
+
+void MyKey::OnRightDown(void)
+{
+	::WriteChar(x, y, ' ', color);
+	if (x >= 79) x = 0;
+	else x++;
+	::WriteChar(x, y, ch, color);
+}
+
+void MyKey::OnUpDown(void)
+{
+	::WriteChar(x, y, ' ', color);
+	if (y <= 0) y = 24;
+	else y--;
+	::WriteChar(x, y, ch, color);
+}
+
+void MyKey::OnDownDown(void)
+{
+	::WriteChar(x, y, ' ', color);
+	if (y >= 24) y = 0;
+	else y++;
+	::WriteChar(x, y, ch, color);
+}
+
+BOOL MyKey::OnALTXDown(void)
+{
+	int res;
+
+	res = ::MessageBox(::GetConsoleWindow(), L"종료할까요?", L"종료", MB_YESNO);
+	if (res == IDOK) return KeyCtl::OnALTXDown();
+	return FALSE;
+}
+
+
+
+
+// <KeyCtl.h>
+#include <iostream>
+using namespace std;
+#include "KeyCtl.h"
+
+KeyCtl::KeyCtl()
+{
+}
+
+KeyCtl::~KeyCtl()
+{
+}
+
+void KeyCtl::KeyProc(void)
+{
+	KEY key;
+	while(1){
+		if(::HitKbd()){ // sync code
+			key = ::GetKey();
+			switch(key.code){
+			case LEFT: OnLeftDown(); break;
+			case RIGHT: OnRightDown(); break;
+			case UP: OnUpDown(); break;
+			case DOWN: OnDownDown(); break;
+			case PGUP: OnPgUpDown(); break;
+			case PGDN: OnPgDnDown(); break;
+			case SPACE: OnSpaceDown(); break;
+			case ESC: OnESCDown(); break;
+			case ENTER: OnEnterDown(); break;
+			case ALTX: 
+				if(TRUE == OnALTXDown()) goto FIN;
+				else break;
+			default: DefaultProc(key.code); break;
+			}
+		}
+		else{ // async code
+			ASyncProc();
+		}
+	}
+FIN:;
+	GotoXY(1, 24);
+	SetDefColor();
+}
+
+void KeyCtl::DefaultProc(short code)
+{
+	// Basic Code
+}
+
+void KeyCtl::ASyncProc(void)
+{
+	// Basic Code
+}
+
+void KeyCtl::OnLeftDown(void)	// 왼쪽 방향키 눌렀을 때
+{
+	// Basic Code
+}
+
+void KeyCtl::OnRightDown(void)
+{
+	// Basic Code
+}
+
+void KeyCtl::OnUpDown(void)
+{
+	// Basic Code
+}
+
+void KeyCtl::OnDownDown(void)
+{
+	// Basic Code
+}
+
+void KeyCtl::OnPgUpDown(void)
+{
+	// Basic Code
+}
+
+void KeyCtl::OnPgDnDown(void)
+{
+	// Basic Code
+}
+
+BOOL KeyCtl::OnALTXDown(void)
+{
+	// Basic Code
+	return TRUE;
+}
+
+void KeyCtl::OnEnterDown(void)
+{
+	// Basic Code
+}
+
+void KeyCtl::OnESCDown(void)
+{
+	// Basic Code
+}
+
+void KeyCtl::OnSpaceDown(void)
+{
+	// Basic Code
+}
+
+
+
+
+
+
+
+
+
+
+// <Console.CPP>
+#include <stdio.h>
+#include <iostream>
+using namespace std;
+#include "Console.H"
+
+KEY GetKey(void)
+{
+	KEY key;
+
+	key.code = _getch();
+	if (key.ascii == 0 || key.ascii & 0x80) {
+		key.code = _getch();
+		key.code <<= 8;
+	}
+	else {
+		if (GetAsyncKeyState(VK_LMENU) & 0x8000) { // ALT Virtual key code 
+			key.scan = key.ascii;
+			key.ascii = (char)0xE0; // division value of ALT Key 
+		}
+	}
+	return key;
+}
+
+int InputInt(int x, int y, int * data)
+{
+	KEY key;
+	char buffer[20];
+	int n;
+
+	n = 0;
+	GotoXY(x, y);
+	while (1) {
+		key = GetKey();
+		if (key.ascii != 0) {
+			switch (key.ascii) {
+			case ESC:
+				buffer[0] = '\0';
+				return 0;
+			case ENTER:
+				buffer[n] = '\0';
+				*data = atoi(buffer);
+				return 1;
+			case BKSP:
+				if (n > 0) {
+					n--;
+					WriteChar(--x, y, ' ', 0x07);
+					GotoXY(x, y);
+				}
+				break;
+			default:
+				if (key.ascii >= '0' && key.ascii <= '9') {
+					if (n < 19) {
+						WriteChar(x++, y, key.ascii, 0x07);
+						buffer[n] = key.ascii;
+						n++;
+					}
+				}
+			}
+		}
+	}
+}
+
+int InputString(int x, int y, char * data, size_t size)
+{
+	KEY key;
+	size_t n;
+
+	n = 0;
+	GotoXY(x, y);
+	while (1) {
+		key = GetKey();
+		if (key.ascii != 0) {
+			switch (key.ascii) {
+			case ESC:
+				data[0] = '\0';
+				return 0;
+			case ENTER:
+				data[n] = '\0';
+				return 1;
+			case BKSP:
+				if (n > 0) {
+					n--;
+					WriteChar(--x, y, ' ', 0x07);
+					GotoXY(x, y);
+				}
+				break;
+			default:
+				if (n < size - 1) {
+					WriteChar(x++, y, key.ascii, 0x07);
+					data[n] = key.ascii;
+					n++;
+				}
+			}
+		}
+	}
+}
+
+void Cls(void)
+{
+	system("cls");
+}
+
+void SetDefColor(void)
+{
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (BLACK << 4) | DWHITE);
+}
+
+void SetTextColor(int bgcolor, int textcolor)
+{
+	textcolor &= 0xF;
+	bgcolor &= 0xF;
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (bgcolor << 4 | textcolor));
+}
+
+void GotoXY(int x, int y)
+{
+	COORD Pos = {(short)x, (short)y};
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Pos);
+}
+
+void WriteChar(int x, int y, char c, int color)
+{
+	GotoXY(x, y);
+	SetTextColor((color & 0xF0) >> 4, color);
+	cout << c;
+}
+
+size_t WriteString(int x, int y, const char * str, int color)
+{
+	size_t cnt = 0;
+	while(*str){
+		WriteChar(x++, y, *str++, color);
+		cnt++;
+	}
+	return cnt;
+}
+
+size_t WriteInt(int x, int y, int data, int color)
+{
+	char temp[20]; 
+	sprintf_s(temp, 20, "%d", data);
+	return WriteString(x, y, temp, color);
+}
+
+void Paint(int left, int top, int right, int bottom, int color)
+{
+	int x, y;
+	for(y = top; y <= bottom; y++){
+		for(x = left; x <= right; x++){
+			WriteChar(x, y, ' ', color << 4);
+		}
+	}
+}
+
+void Box(int left, int top, int right, int bottom, int style, int color)
+{
+	int x, y;
+	int line[2][6] = {
+		{218, 191, 192, 217, 196, 179},
+		{201, 187, 200, 188, 205, 186}
+	};
+	if(!(style >= 1 && style <= 2)) style = 1;
+	style--;
+	WriteChar(left, top, line[style][0], color);
+	WriteChar(right, top, line[style][1], color);
+	WriteChar(left, bottom, line[style][2], color);
+	WriteChar(right, bottom, line[style][3], color);
+	for(y = top + 1; y < bottom; y++){
+		WriteChar(left, y, line[style][5], color);
+		WriteChar(right, y, line[style][5], color);
+	}
+	for(x = left + 1; x < right; x++){
+		WriteChar(x, top, line[style][4], color);
+		WriteChar(x, bottom, line[style][4], color);
+	}
+}
+
+
+
+
+// <Main.cpp>
+#include "KeyCtl.h"
+#include "MyKey.h"
+
+
+void main(void)
+{
+	MyKey kc;		// KeyCtl kc; 에서 수정
+	kc.KeyProc();
+}
