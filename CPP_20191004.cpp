@@ -44,7 +44,7 @@ void main(void)
 #endif
 
 // 파생클래스의 생성자, 소멸자 함수
-#if 0
+#if 01
 #include <iostream>
 using namespace std;
 
